@@ -33,7 +33,6 @@ START:
 
 
     BSR     WELCOME    BRANCH TO THE WELCOME SUBROUTINE
-    BSR     INPUT      BRANCH TO THE INPUT SUBROUTINE
     BSR     GAME       BRANCH TO THE GAME SUBROUTINE
 *GAME LOOP
     ORG     $3000      THE REST OF THE PROGRAM IS TO BE LOCATED FROM 3000 ONWARDS
@@ -60,14 +59,6 @@ WELCOME:
     RTS                     RETURN FROM WELCOME: SUBROUTINE
 
 *-------------------------------------------------------
-*---------GAMEPLAY INPUT VALUES SUBROUTINE--------------
-*-------------------------------------------------------    
-INPUT:
-    BSR     POTIONS         BRANCH TO POTION INPUT SUBROUTINE
-    BSR     WEAPONS         BRANCH TO WEAPONSS INPUT SUBROUTINE
-    RTS
-
-*-------------------------------------------------------
 *----------------GAMELOOP (MAIN LOOP)-------------------
 *------------------------------------------------------- 
 GAMELOOP:
@@ -90,10 +81,7 @@ GAMEPLAY_RESET:
 *------------------------------------------------------- 
 UPDATE:
     BSR     ENDL            PRINT A CR AND LF
-    BSR     DECORATE        DECORATE WITH DOTS USING A LOOP   
-    LEA     UPDATE_MSG,A1   
-    MOVE.B  #14,D0
-    TRAP    #15
+    BSR     DECORATE        DECORATE WITH DOTS USING A LOOP 
     CMP.B   #0, MOVE_CHOICE
     BNE     MOVE_EXECUTE
 UPDATE_RETURN:
@@ -106,13 +94,21 @@ MOVE_EXECUTE:
     BEQ     HEAL
 PLAYER_COMPLETE:
     SUB.L   #10, HEALTH
+    MOVE.B  #4,D0
+    TRAP    #15
     BRA.S   UPDATE_RETURN
 
 ATTACK:
     SUB.L   #5, ENEMYHEALTH
+    LEA     ATTACK_MSG,A1   
+    MOVE.B  #14,D0
+    TRAP    #15
     BRA.S   PLAYER_COMPLETE
 HEAL:
     MOVE.l  #100,HEALTH
+    LEA     HEAL_MSG,A1   
+    MOVE.B  #14,D0
+    TRAP    #15
     BRA.S   PLAYER_COMPLETE
 *-------------------------------------------------------
 *-----------------DRAW QUEST UPDATES--------------------
@@ -123,32 +119,6 @@ DRAW:
     BSR     ENDL
     BSR     DECORATE
     LEA     DRAW_MSG,A1
-    MOVE.B  #14,D0
-    TRAP    #15
-    BSR     DECORATE
-    RTS
-
-*-------------------------------------------------------
-*--------------------POTIONS INVENTORY---------------------
-* NUMBER OF POTIONS TO BE USED IN A QUEST 
-*------------------------------------------------------- 
-POTIONS:
-    BSR     ENDL
-    BSR     DECORATE
-    LEA     POTIONS_MSG,A1
-    MOVE.B  #14,D0
-    TRAP    #15
-    BSR     DECORATE
-    RTS
-
-*-------------------------------------------------------
-*-------------------------WEAPONS-----------------------
-* NUMBER OF WEAPONS
-*-------------------------------------------------------   
-WEAPONS:
-    BSR     ENDL
-    BSR     DECORATE
-    LEA     WEAPONS_MSG,A1
     MOVE.B  #14,D0
     TRAP    #15
     BSR     DECORATE
@@ -233,7 +203,7 @@ HUD:
 
     BSR     ENDL
     BSR     DECORATE
-    LEA     HUD_MSG,A1
+    *LEA     HUD_MSG,A1
     MOVE.B  #14,D0
     TRAP    #15
     MOVE.B  (A3),D1     RETRIEVE THE VALUE A3 POINT TO AND MOVE TO D1
@@ -301,9 +271,6 @@ CLEAR_SCREEN:
 *-------------------------------------------------------
 REPLAY:
     BSR     ENDL
-    LEA     REPLAY_MSG,A1
-    MOVE.B  #14,D0
-    TRAP    #15
     
     CMP.L   #0,ENEMYHEALTH
     BLE     END  
@@ -331,15 +298,8 @@ WELCOME_MSG:    DC.B    '*******************************************************
                 DC.B    $0D,$0A
                 DC.B    '************************************************************'
                 DC.B    $0D,$0A,0
-POTION_MSG:     DC.B    'POTION ....'
-                DC.B    $0D,$0A
-                DC.B    'ENTER POTION : ',0
-POTIONS_MSG:    DC.B    'NUMBER OF POTIONS : ',0
-WEAPONS_MSG:    DC.B    'EACH QUEST NEED AT LEAST 2 WEAPONS'
-                DC.B    $0D,$0A
-                DC.B    'MINIMUM REQUIREMENT IS 2 I.E. SWORD X 1 AND SPEER X 1.'
-                DC.B    $0D,$0A
-                DC.B    'ENTER # OF WEAPONS : ',0
+ATTACK_MSG:     DC.B    'YOU DEALT 5 DAMAGE',0
+HEAL_MSG:       DC.B    'YOU HEALED BACK UP TO 100',0
 
 RABBIT_MSG:     DC.B    'RABBIT HEALTH: ', 0
 RABBIT_MSG2:    DC.B    $0D,$0A
@@ -359,13 +319,11 @@ COMBAT_OPTIONS: DC.B    $0D,$0A
                 DC.B    $0D,$0A,0
 RABBITOR_MSG:   DC.B    'RABBIT OR PLUMBER?(0 FOR RABBIT, 1 FOR PLUMBER)'
                 DC.B    $0D,$0A,0
-UPDATE_MSG:     DC.B    'UPDATE GAMEPLAY !',0
 DRAW_MSG:       DC.B    'DRAW SCREEN !',0
 HIT_MSG:        DC.B    'STRIKE!',0
 MISS_MSG:       DC.B    'MISS!',0
 LOOP_MSG:       DC.B    '.',0
-REPLAY_MSG:     DC.B    'ENTER 0 TO QUIT ANY OTHER NUMBER TO REPLAY : ',0
-HUD_MSG:        DC.B    'SCORE : ',0
+
 
 HEALTH:         DS.L    1   PLAYERS HEALTH
 ENEMYHEALTH:    DS.L    1   ENEMY HEALTH
@@ -376,6 +334,7 @@ TEAM            DS.B    1   TEAMSELECTED
 MOVE_CHOICE     DS.B    1   CURRECNTLY SELECTED MOVE
 
     END START
+
 
 
 
