@@ -82,11 +82,24 @@ GAMEPLAY_RESET:
 UPDATE:
     BSR     ENDL            PRINT A CR AND LF
     BSR     DECORATE        DECORATE WITH DOTS USING A LOOP 
+    CMP.B   #1, GAMESTATE
+    BNE     SKIP        
     CMP.B   #0, MOVE_CHOICE
     BNE     MOVE_EXECUTE
+    LEA     READY_MSG,A1
+    MOVE.B  #14,D0
+    TRAP    #15
 UPDATE_RETURN:
     BSR     DECORATE
+    MOVE.B  #4,D0
+    TRAP    #15
     RTS
+SKIP:
+    LEA     INTRO_MSG,A1
+    MOVE.B  #14,D0
+    TRAP    #15
+    BRA.S   UPDATE_RETURN
+    
 MOVE_EXECUTE:
     CMP.B   #1, MOVE_CHOICE
     BEQ     ATTACK
@@ -94,7 +107,8 @@ MOVE_EXECUTE:
     BEQ     HEAL
 PLAYER_COMPLETE:
     SUB.L   #10, HEALTH
-    MOVE.B  #4,D0
+    LEA     ENEMY_MSG,A1
+    MOVE.B  #14,D0
     TRAP    #15
     BRA.S   UPDATE_RETURN
 
@@ -273,11 +287,25 @@ REPLAY:
     BSR     ENDL
     
     CMP.L   #0,ENEMYHEALTH
-    BLE     END  
+    BLE     WIN  
 
     CMP.L   #0,HEALTH
-    BLE     END         
+    BLE     LOSE         
     BSR     GAMELOOP
+
+LOSE:    
+    LEA     LOSE_MSG,A1
+    MOVE.B  #14,D0
+    TRAP    #15
+    BRA.S   STOP
+WIN:
+    LEA     LOSE_MSG,A1
+    MOVE.B  #14,D0
+    TRAP    #15
+STOP:
+    MOVE.B  #4,D0
+    TRAP    #15
+    JMP     END
 
 ENDL:
     MOVEM.L D0/A1,-(A7)
@@ -294,11 +322,11 @@ ENDL:
 CRLF:           DC.B    $0D,$0A,0
 WELCOME_MSG:    DC.B    '************************************************************'
                 DC.B    $0D,$0A
-                DC.B    'STRATEGY GAMES SUCH AS ZORK, AVALON, OR RABBITS VS PLUMBERS'
+                DC.B    'RABBITS VS PLUMBERS'
                 DC.B    $0D,$0A
                 DC.B    '************************************************************'
                 DC.B    $0D,$0A,0
-ATTACK_MSG:     DC.B    'YOU DEALT 5 DAMAGE',0
+ATTACK_MSG:     DC.B    'ENEMY TOOK 5 DAMAGE',0
 HEAL_MSG:       DC.B    'YOU HEALED BACK UP TO 100',0
 
 RABBIT_MSG:     DC.B    'RABBIT HEALTH: ', 0
@@ -323,6 +351,13 @@ DRAW_MSG:       DC.B    'DRAW SCREEN !',0
 HIT_MSG:        DC.B    'STRIKE!',0
 MISS_MSG:       DC.B    'MISS!',0
 LOOP_MSG:       DC.B    '.',0
+ENEMY_MSG:      DC.B    $0D,$0A
+                DC.B    'YOU TOOK 10 DAMAGE!',0
+WIN_MSG:        DC.B    'YOU WON!',0
+LOSE_MSG:       DC.B    'YOU LOST..',0
+INTRO_MSG:      DC.B    'FIRST CHOOSE A SIDE',0
+READY_MSG:      DC.B    'FIGHT THE ENEMY!',0
+
 
 
 HEALTH:         DS.L    1   PLAYERS HEALTH
@@ -334,6 +369,7 @@ TEAM            DS.B    1   TEAMSELECTED
 MOVE_CHOICE     DS.B    1   CURRECNTLY SELECTED MOVE
 
     END START
+
 
 
 
